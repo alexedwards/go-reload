@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo "==> Ctrl+C to exit"
+
+FILE_PATH=$1
+FILE_NAME=$(basename $FILE_PATH)
+PROCESS_NAME=${FILE_NAME%%.*}
+
+go run $FILE_PATH &
+
+inotifywait -m -r -e close_write --exclude '[^g][^o]$' . |
+while read line
+do
+  if [ "$(pidof $PROCESS_NAME)" ]
+  then
+    killall -w -9 $PROCESS_NAME
+  fi
+  echo "==> Reloading..."
+  go run $FILE_PATH &
+done
