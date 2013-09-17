@@ -20,7 +20,7 @@ $ git clone https://github.com/alexedwards/go-reload.git
 ```
 $ cd go-reload
 $ chmod +x go-reload
-$ mv go-reload /usr/local/bin
+$ sudo mv go-reload /usr/local/bin/
 ```
 
 Usage
