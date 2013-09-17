@@ -8,14 +8,14 @@ It comes in useful when developing Go web applications.
 Installation
 ------------
 
-1. Install [inotify-tools](https://github.com/rvoicilas/inotify-tools) and clone this repository:
+1) Install [inotify-tools](https://github.com/rvoicilas/inotify-tools) and clone this repository:
 
 ```
 $ sudo apt-get install inotify-tools
 $ git clone https://github.com/alexedwards/go-reload.git
 ```
 
-2. Make the script executable and move it to somewhere on your system path. For example:
+2) Make the script executable and move it to somewhere on your system path. For example:
 
 ```
 $ cd go-reload
