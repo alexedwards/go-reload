@@ -1,20 +1,49 @@
 #!/bin/bash
 
-echo "==> Ctrl+C to exit"
+# Watch all *.go files in the specified directory
+# Call the restart function when they are saved
+function monitor() {
+  inotifywait -q -m -r -e close_write --exclude '[^g][^o]$' $1 |
+  while read line; do
+    restart
+  done
+}
+
+# Terminate and rerun the main Go program
+function restart {
+  if [ "$(pidof $PROCESS_NAME)" ]; then
+    killall -q -w -9 $PROCESS_NAME
+  fi
+  echo ">> Reloading..."
+  go run $FILE_PATH &
+}
+
+# Make sure all background processes get terminated
+function close {
+  killall -q -w -9 inotifywait
+  killall -q -w -9 go-reload
+  exit 0
+}
+
+trap close INT
+echo "== Go-reload"
+echo ">> Watching directories, CTRL+C to stop"
 
 FILE_PATH=$1
 FILE_NAME=$(basename $FILE_PATH)
 PROCESS_NAME=${FILE_NAME%%.*}
 
+# Start the main Go program
 go run $FILE_PATH &
 
-inotifywait -m -r -e close_write --exclude '[^g][^o]$' . |
-while read line
+# Monitor the /src directories in all directories on the GOPATH
+OIFS="$IFS"
+IFS=':'
+for path in $GOPATH
 do
-  if [ "$(pidof $PROCESS_NAME)" ]
-  then
-    killall -w -9 $PROCESS_NAME
-  fi
-  echo "==> Reloading..."
-  go run $FILE_PATH &
+  monitor $path/src &
 done
+IFS="$OIFS"
+
+# Monitor the current directory
+monitor .
