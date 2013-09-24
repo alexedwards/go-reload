@@ -21,7 +21,6 @@ function restart {
 # Make sure all background processes get terminated
 function close {
   killall -q -w -9 inotifywait
-  killall -q -w -9 go-reload
   exit 0
 }
 
