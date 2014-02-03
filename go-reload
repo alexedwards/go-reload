@@ -18,6 +18,8 @@ then
 	exit 1
 fi
 
+[ ! -f $1 ] && echo "File $1 doesn't exist!?" && exit 1
+
 # Watch all *.go files in the specified directory
 # Call the restart function when they are saved
 function monitor() {
@@ -49,6 +51,7 @@ echo ">> Watching directories, CTRL+C to stop"
 FILE_PATH=$1
 FILE_NAME=$(basename $FILE_PATH)
 PROCESS_NAME=${FILE_NAME%%.*}
+FILE_DIR=$(dirname $(readlink -e $FILE_PATH))
 
 shift
 ARGS=$@
@@ -59,11 +62,19 @@ go run $FILE_PATH $ARGS &
 # Monitor the /src directories in all directories on the GOPATH
 OIFS="$IFS"
 IFS=':'
+FILE_CWD_FLAG=false
 for path in $GOPATH
 do
-  monitor $path/src &
+	monitor $path/src &
+	if [[ $FILE_DIR == "$path/"* ]]
+	then
+		FILE_CWD_FLAG=true
+	fi
 done
 IFS="$OIFS"
 
 # Monitor the current directory
-monitor .
+if ! $FILE_CWD_FLAG
+then
+	monitor .
+fi
