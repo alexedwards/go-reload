@@ -51,7 +51,7 @@ echo ">> Watching directories, CTRL+C to stop"
 FILE_PATH=$1
 FILE_NAME=$(basename $FILE_PATH)
 PROCESS_NAME=${FILE_NAME%%.*}
-FILE_DIR=$(dirname $(readlink -e $FILE_PATH))
+PWD=$(pwd)
 
 shift
 ARGS=$@
@@ -62,19 +62,14 @@ go run $FILE_PATH $ARGS &
 # Monitor the /src directories in all directories on the GOPATH
 OIFS="$IFS"
 IFS=':'
-FILE_CWD_FLAG=false
 for path in $GOPATH
 do
-	monitor $path/src &
-	if [[ $FILE_DIR == "$path/"* ]]
+	if [[ $PWD != "$path/"* ]]
 	then
-		FILE_CWD_FLAG=true
+		monitor $path/src &
 	fi
 done
 IFS="$OIFS"
 
 # Monitor the current directory
-if ! $FILE_CWD_FLAG
-then
-	monitor .
-fi
+monitor .
