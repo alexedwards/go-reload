@@ -1,51 +1,158 @@
 #!/bin/bash
+#
+# Watch for go changes and then restart the go runner.
+#
+# This acts as a wrapper for go run, stopping and restarting the processes
+# whenever a .go file in the $GOPATH changes. Very handy for go web
+# applications.
+#
+# Just use this script in place of go run. For example:
+#   : $ go-reload main.go
+#   : == Go-reload
+#   : >> Watching directories, CTRL+c to stop
+#
+# To use this, you will need inotify-tools, go (duh), and your $GOPATH should be
+# properly set!
 
-# Watch all *.go files in the specified directory
-# Call the restart function when they are saved
+set -e
+
+declare -r FILE_PATH=$1
+declare -r PID=$$
+
+shift
+declare -r ARGS=$@
+
+################################################################################
+# Watches all *.go files in the specific directory and calls `restart' when
+# those files are updated.
+#
+# Globals:
+#   None
+# Arguments:
+#   The path to monitor.
+# Returns:
+#   None
+################################################################################
 function monitor() {
-  inotifywait -q -m -r -e close_write --exclude '[^g][^o]$' $1 |
+  local path=$1
+  local pipe=<(inotifywait --quiet --monitor --recursive --event close_write \
+    --exclude '[^g][^o]$' $path)
   while read line; do
     restart
-  done
+  done < $pipe
 }
 
-# Terminate and rerun the main Go program
+################################################################################
+# Terminates and re runs the main Go program.
+#
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+################################################################################
 function restart {
-  if [ "$(pidof $PROCESS_NAME)" ]; then
-    killall -q -w -9 $PROCESS_NAME
-  fi
+  close
   echo ">> Reloading..."
+  start
+}
+
+################################################################################
+# Starts the main Go program.
+#
+# Globals:
+#   FILE_PATH
+#   ARGS
+# Arguments:
+#   None
+# Returns:
+#   None
+################################################################################
+function start {
+  local pids=$(pidof go run $FILE_PATH)
+  if [[ -n $pids ]]; then
+    echo "The go app is already running!" >&2
+    exit 1
+  fi
   go run $FILE_PATH $ARGS &
 }
 
-# Make sure all background processes get terminated
+################################################################################
+# Terminates the main Go program
+#
+# Globals:
+#   FILE_PATH
+# Arguments:
+#   None
+# Returns:
+#   None
+################################################################################
 function close {
-  killall -q -w -9 inotifywait
+  # TODO: Getting the pids of all "go run main.go" commands is still a little
+  # weak. See about keeping track of the pids in a variable.
+  local pids=$(pidof go run $FILE_PATH)
+  if [[ -n $pids ]]; then
+    for p in $pids; do
+      # Kill the child processes of go run, namely, the app that's running.
+      # TODO: Nuke these if asking nicely doesn't work!
+      ps --no-headers -o pid --ppid=$p | xargs kill
+      kill $p
+    done
+  fi
+}
+
+################################################################################
+# Cleans up and stops all running processes.
+#
+# Globals:
+#   PID
+# Arguments:
+#   None
+# Returns:
+#   None
+################################################################################
+function cleanup {
+  echo "Clean it up"
+  # Kill all of the child processes so that we don't have hanging inotifywait
+  # calls.
+  kill -- -$PID
   exit 0
 }
 
-trap close INT
-echo "== Go-reload"
-echo ">> Watching directories, CTRL+C to stop"
+################################################################################
+# Runs the core logic of the app.
+#
+# Globals:
+#   GOPATH
+# Arguments:
+#   None
+# Returns:
+#   None
+################################################################################
+function main {
+  echo "== Go-reload"
+  echo ">> Watching directories, CTRL+C to stop"
 
-FILE_PATH=$1
-FILE_NAME=$(basename $FILE_PATH)
-PROCESS_NAME=${FILE_NAME%%.*}
+  start
 
-shift
-ARGS=$@
+  # Monitor the /src directories in all directories on the GOPATH.
+  oifs="${IFS}"
+  IFS=":"
+  for path in $GOPATH; do
+    monitor $path/src &
+  done
+  IFS="${oifs}"
 
-# Start the main Go program
-go run $FILE_PATH $ARGS &
+  wait
+}
 
-# Monitor the /src directories in all directories on the GOPATH
-OIFS="$IFS"
-IFS=':'
-for path in $GOPATH
-do
-  monitor $path/src &
-done
-IFS="$OIFS"
+trap cleanup INT
 
-# Monitor the current directory
-monitor .
+# And start.
+main
+
+# Local Variables:
+# sh-basic-offset: 2
+# fill-column: 80
+# End:
