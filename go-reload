@@ -136,13 +136,26 @@ function main {
 
   start
 
-  # Monitor the /src directories in all directories on the GOPATH.
+  # Monitor the /src directories in all directories on the GOPATH. If the
+  # current working directory isn't in the GOPATH, then monitor that one as
+  # well.
+
+  local app_path=$(realpath .)
+  local source_in_path=false
+
   local oifs="${IFS}"
   IFS=":"
   for path in $GOPATH; do
     monitor $path/src &
+    if [[ $app_path == $path* ]]; then
+      source_in_path=true
+    fi
   done
   IFS="${oifs}"
+
+  if [[ $source_in_path == false ]]; then
+    monitor $app_path &
+  fi
 
   wait
 }
