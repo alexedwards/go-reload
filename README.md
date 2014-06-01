@@ -1,7 +1,7 @@
 go-reload
 =========
 
-This is a Bash script for automatically reloading Go programs. It acts as a wrapper for `go run`, stopping and restarting the process whenever a `.go` file in your current directory or <code>$GOPATH/src</code> folder is saved.
+This is a Bash script for automatically reloading Go programs. It acts as a wrapper for `go run`, stopping and restarting the process whenever a `.go` file in your current directory or `$GOPATH/src` folder is saved.
 
 It comes in useful when developing Go web applications.
 
@@ -33,3 +33,5 @@ $ go-reload main.go
 == Go-reload
 >> Watching directories, CTRL+C to stop
 ```
+
+**Sublime Text 3 users**: For this script to work you must disable atomic saving in your preferences: `"atomic_save": false`
