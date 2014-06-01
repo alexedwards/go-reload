@@ -38,7 +38,7 @@ ARGS=$@
 # Start the main Go program
 go run $FILE_PATH $ARGS &
 
-# Monitor the /src directories in all directories on the GOPATH
+# Monitor all /src directories on the GOPATH
 OIFS="$IFS"
 IFS=':'
 for path in $GOPATH
@@ -47,5 +47,10 @@ do
 done
 IFS="$OIFS"
 
-# Monitor the current directory
-monitor .
+# If the current working directory isn't on the GOPATH, monitor it too
+if [[ $PWD != $GOPATH* ]]
+then
+  monitor $PWD
+fi
+
+wait
