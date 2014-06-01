@@ -1,4 +1,24 @@
 #!/bin/bash
+#
+# go-reload
+#
+# Bash script for automatically reloading Go programs. It acts as a wrapper 
+# for go run, stopping and restarting the process whenever a .go file in 
+# your current directory or $GOPATH/src folder is saved.
+# 
+# The MIT License (MIT)
+# Copyright (c) 2013 Alex Edwards
+#
+# https://github.com/alexedwards/go-reload
+#
+
+if [ "$#" -ne 1 ]
+then
+	echo "Usage: $0 <go script>"
+	exit 1
+fi
+
+[ ! -f $1 ] && echo "File $1 doesn't exist!?" && exit 1
 
 # Watch all *.go files in the specified directory
 # Call the restart function when they are saved
@@ -31,6 +51,7 @@ echo ">> Watching directories, CTRL+C to stop"
 FILE_PATH=$1
 FILE_NAME=$(basename $FILE_PATH)
 PROCESS_NAME=${FILE_NAME%%.*}
+PWD=$(pwd)
 
 shift
 ARGS=$@
@@ -43,7 +64,10 @@ OIFS="$IFS"
 IFS=':'
 for path in $GOPATH
 do
-  monitor $path/src &
+	if [[ $PWD != "$path/"* ]]
+	then
+		monitor $path/src &
+	fi
 done
 IFS="$OIFS"
 
