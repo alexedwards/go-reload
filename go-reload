@@ -48,7 +48,7 @@ done
 IFS="$OIFS"
 
 # If the current working directory isn't on the GOPATH, monitor it too
-if [[ $PWD != $GOPATH* ]]
+if [[ $PWD != "$GOPATH/"* ]]
 then
   monitor $PWD
 fi
