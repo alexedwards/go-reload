@@ -33,5 +33,3 @@ $ go-reload main.go
 == Go-reload
 >> Watching directories, CTRL+C to stop
 ```
-
-**Sublime Text 3 users**: For this script to work you must disable atomic saving in your preferences: `"atomic_save": false`
