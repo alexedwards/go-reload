@@ -15,7 +15,7 @@ function restart {
     killall -q -w -9 $PROCESS_NAME
   fi
   echo ">> Reloading..."
-  go run $FILE_PATH $ARGS &
+  eval "go run $ARGS &"
 }
 
 # Make sure all background processes get terminated
@@ -28,15 +28,13 @@ trap close INT
 echo "== Go-reload"
 echo ">> Watching directories, CTRL+C to stop"
 
-FILE_PATH=$1
-FILE_NAME=$(basename $FILE_PATH)
+FILE_NAME=$(basename $1)
 PROCESS_NAME=${FILE_NAME%%.*}
 
-shift
 ARGS=$@
 
 # Start the main Go program
-go run $FILE_PATH $ARGS &
+eval "go run $ARGS &"
 
 # Monitor all /src directories on the GOPATH
 OIFS="$IFS"
