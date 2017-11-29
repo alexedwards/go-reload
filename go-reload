@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 function monitor() {
   if [ "$2" = "true" ];  then
     # Watch all files in the specified directory
