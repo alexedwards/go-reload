@@ -10,7 +10,7 @@ function monitor() {
   else
     # Watch all *.go files in the specified directory
     # Call the restart function when they are saved
-    inotifywait -q -m -r -e close_write -e moved_to --exclude '[^g][^o]$' $1 |
+    inotifywait -q -m -r -e close_write -e modify -e moved_to --exclude '[^g][^o]$' $1   |
     while read line; do
       restart
     done
