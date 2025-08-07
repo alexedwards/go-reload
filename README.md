@@ -1,6 +1,10 @@
 go-reload
 =========
 
+**Note:** This repository is now archived. Please use the excellent https://github.com/air-verse/air for your live reloading needs!
+
+---
+
 This is a Bash script for automatically reloading Go programs. It acts as a wrapper for `go run`, stopping and restarting the process whenever a `.go` file in your current directory or `$GOPATH/src` folder is modified or moved.
 
 It comes in useful when developing Go web applications.
